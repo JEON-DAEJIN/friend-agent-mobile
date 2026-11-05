@@ -25,7 +25,21 @@
     },
     "plugins": [
       "expo-router",
-      "expo-status-bar"
+      "expo-status-bar",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "일정표나 안내문을 찍어 글자를 읽고 약속으로 만들려고 카메라를 사용합니다.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "사진첩에서 일정표 사진을 골라 글자를 읽고 약속으로 만들려고 사진에 접근합니다."
+        }
+      ]
     ],
     "scheme": "harufriend",
     "experiments": {

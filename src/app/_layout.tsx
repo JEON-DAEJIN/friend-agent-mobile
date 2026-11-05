@@ -11,6 +11,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerTitleAlign: 'center' }}>
         <Stack.Screen name="index" options={{ title: '하루친구' }} />
         <Stack.Screen name="character" options={{ title: '캐릭터' }} />
+        <Stack.Screen name="camera" options={{ headerShown: false }} />
       </Stack>
     </SessionProvider>
   );

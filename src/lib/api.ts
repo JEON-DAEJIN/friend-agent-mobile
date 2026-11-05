@@ -35,11 +35,52 @@ export async function api<T>(path: string, options: { method?: string; body?: un
   return (await response.json()) as T;
 }
 
+// 사진 속 글자 읽기(POST /api/ocr). 사진을 multipart 폼의 photo 칸에 담아 보내고 {"text": "읽은 글"} 을 받는다. 로그인 토큰 필요.
+// 주의: multipart 는 경계 문자열이 들어간 Content-Type 을 요청이 직접 만들어야 한다. 위 headers() 처럼 JSON용
+// Content-Type 을 붙이면 백엔드가 사진을 찾지 못해 400이 나므로, 여기서는 로그인 토큰만 붙인다.
+//
+// 왜 fetch 가 아니라 XMLHttpRequest 인가(N057 실습, SDK 58 + Expo Go에서 실제로 겪음):
+//  1) SDK 58은 expo/fetch 를 전역 fetch 자리에 넣어 둔다. 여기에 옛 React Native 식 { uri, name, type } 을 담으면
+//     "Unsupported FormDataPart implementation" 오류가 난다.
+//  2) expo-file-system 의 File(Blob)로 담으면 이번엔 JavaScript 가 파일 바이트를 직접 읽다가 Expo Go에서
+//     "FileSystemFile.bytes … missing 'READ' permission" 으로 막혔다(카메라로 찍은 사진).
+//  3) React Native 의 XMLHttpRequest 는 { uri, name, type } 을 받아 네이티브 쪽이 파일을 직접 읽어 보내므로
+//     JavaScript 의 파일 읽기 허가가 필요 없다.
+export function readPhoto(photo: { uri: string; mimeType?: string | null; fileName?: string | null }): Promise<string> {
+  requireUrl();
+  const form = new FormData();
+  form.append('photo', {
+    uri: photo.uri,
+    name: photo.fileName ?? 'photo.jpg',
+    type: photo.mimeType ?? 'image/jpeg',
+  } as unknown as Blob);
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', API_URL + '/api/ocr');
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`); // Content-Type 은 넣지 않는다(경계 문자열은 전송 통로가 만든다)
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve((JSON.parse(xhr.responseText) as { text: string }).text);
+        } catch (e) {
+          reject(e);
+        }
+      } else {
+        reject(new Error(`/api/ocr 요청 실패: ${xhr.status} ${xhr.responseText}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error('/api/ocr 요청 실패: 네트워크 오류(백엔드 주소·와이파이 확인)'));
+    xhr.send(form);
+  });
+}
+
 // /api/chat 은 한 줄에 이벤트 하나(JSON)씩 흘려보낸다. 답 글자는 delta, 끝나면 done, 실패하면 error.
 export type ChatEvent =
   | { type: 'delta'; text: string }
   | { type: 'done'; message_id: number }
   | { type: 'error'; message: string }
+  | { type: 'memory'; added: string[] } // 기억 정리 결과. 답 글자(delta)가 다 온 뒤에 온다
+  | { type: 'reminder'; action: string; summary: string } // 도구가 약속을 만들었을 때. 답 글자보다 먼저 온다
   | { type: string; [key: string]: unknown };
 
 export async function streamChat(message: string, onEvent: (event: ChatEvent) => void) {
@@ -78,6 +119,7 @@ export type Config = {
   storage: string;
   supabase_url: string;
   supabase_publishable_key: string;
+  ocr_enabled?: boolean; // 백엔드에서 사진 글자 읽기(OCR_ENABLED)가 켜져 있는지. 꺼져 있으면 /api/ocr 은 404
   options: Record<string, string[]>;
 };
 
@@ -98,4 +140,6 @@ export type Character = {
   avatar: string;
 };
 
-export type Message = { id?: number; role: 'user' | 'assistant'; content: string };
+// notes: 그 턴에 흘러온 memory·reminder 이벤트로 만든 메모(예: "🧠 기억했어요: …", "⏰ …").
+// 저장된 메시지가 아니라 스트리밍 이벤트라서 /api/messages 로 다시 불러온 지난 대화에는 없다.
+export type Message = { id?: number; role: 'user' | 'assistant'; content: string; notes?: string[] };
