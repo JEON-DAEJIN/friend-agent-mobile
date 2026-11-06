@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "하루친구",
+    "name": "대진이의 하루친구",
     "slug": "friend-agent-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.example.harufriend"
+      "bundleIdentifier": "kr.study.harufriend.djeon"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.example.harufriend"
+      "package": "kr.study.harufriend.djeon"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -44,6 +44,16 @@
     "scheme": "harufriend",
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "1b03a934-f1b4-4359-bc7d-ab8a2cc8d55f"
+      }
     }
   }
 }

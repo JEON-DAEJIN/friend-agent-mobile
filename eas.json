@@ -7,11 +7,11 @@
     "preview": {
       "distribution": "internal",
       "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://여기에-내-백엔드-주소.run.app" }
+      "env": { "EXPO_PUBLIC_API_URL": "https://friend-agent-staging-6hcdot5xkq-uc.a.run.app" }
     },
     "production": {
       "autoIncrement": true,
-      "env": { "EXPO_PUBLIC_API_URL": "https://여기에-내-백엔드-주소.run.app" }
+      "env": { "EXPO_PUBLIC_API_URL": "https://friend-agent-6hcdot5xkq-uc.a.run.app" }
     }
   },
   "submit": {
